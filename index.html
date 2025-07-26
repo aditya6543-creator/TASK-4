@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Blog UI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body, html {
+      height: 100%;
+      overflow: hidden;
+      background: black;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    .post {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 600px;
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .post h2 {
+      margin-bottom: 10px;
+    }
+
+    .post p {
+      color: #ddd;
+    }
+
+    .post a {
+      color: #00ffe0;
+      text-decoration: none;
+      margin-right: 15px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+
+  <div class="content">
+    <h1>Latest Posts</h1>
+    <?php
+    require 'auth_session.php';
+    require 'db.php';
+
+    $result = $conn->query("SELECT * FROM posts ORDER BY created_at DESC");
+    while ($row = $result->fetch_assoc()) {
+        echo "<div class='post'>";
+        echo "<h2>{$row['title']}</h2>";
+        echo "<p>{$row['content']}</p>";
+        echo "<a href='edit.php?id={$row['id']}'>Edit</a>";
+        echo "<a href='delete.php?id={$row['id']}'>Delete</a>";
+        echo "</div>";
+    }
+    ?>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+    let stars = [];
+    const starCount = 150;
+
+    for (let i = 0; i < starCount; i++) {
+      stars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        z: Math.random() * width
+      });
+    }
+
+    function animateStars(mouseX = width / 2, mouseY = height / 2) {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, width, height);
+
+      for (let i = 0; i < starCount; i++) {
+        let star = stars[i];
+        star.z -= 2;
+        if (star.z <= 0) {
+          star.z = width;
+        }
+
+        const k = 128.0 / star.z;
+        const px = (star.x - mouseX) * k + width / 2;
+        const py = (star.y - mouseY) * k + height / 2;
+
+        if (px >= 0 && px <= width && py >= 0 && py <= height) {
+          const size = (1 - star.z / width) * 3;
+          ctx.beginPath();
+          ctx.arc(px, py, size, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+        }
+      }
+
+      requestAnimationFrame(() => animateStars(mouseX, mouseY));
+    }
+
+    animateStars();
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      animateStars(e.clientX, e.clientY);
+    });
+  </script>
+</body>
+</html>
